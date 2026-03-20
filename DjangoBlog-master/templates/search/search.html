@@ -1,0 +1,86 @@
+{% extends 'share_layout/base.html' %}
+{% load blog_tags %}
+{% load i18n %}
+{% block header %}
+    {% if query %}
+        <title>搜索：{{ query }} | {{ SITE_NAME }}</title>
+        <meta name="description" content="搜索 {{ query }} 的相关文章和内容"/>
+        <meta name="keywords" content="{{ query }}, 搜索, {{ SITE_KEYWORDS }}"/>
+    {% else %}
+        <title>搜索 | {{ SITE_NAME }}</title>
+        <meta name="description" content="{{ SITE_SEO_DESCRIPTION }}"/>
+        <meta name="keywords" content="{{ SITE_KEYWORDS }}"/>
+    {% endif %}
+    <link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}"/>
+    <meta property="og:type" content="website"/>
+    <meta property="og:title" content="搜索{% if query %}：{{ query }}{% endif %} | {{ SITE_NAME }}"/>
+    <meta property="og:description" content="{% if query %}搜索 {{ query }} 的相关内容{% else %}{{ SITE_DESCRIPTION }}{% endif %}"/>
+    <meta property="og:url" content="{{ request.get_full_path }}"/>
+    <meta property="og:site_name" content="{{ SITE_NAME }}"/>
+{% endblock %}
+{% block content %}
+    <div id="primary" class="site-content">
+        <div id="content" role="main">
+            {% if query %}
+                <header class="archive-header">
+                    {% if suggestion %}
+                        <h2 class="archive-title">
+                            已显示<span class="text-red-600 dark:text-red-400"> "{{ suggestion }}" </span>的搜索结果。
+                            仍然搜索：<a class="normal-case hover:underline" href="/search/?q={{ query }}&is_suggest=no">{{ query }}</a>
+                        </h2>
+                    {% else %}
+                        <h2 class="archive-title">
+                            搜索：<span class="text-red-600 dark:text-red-400">{{ query }}</span>
+                        </h2>
+                    {% endif %}
+                </header><!-- .archive-header -->
+            {% endif %}
+            {% if query and page.object_list %}
+                {% for result in page.object_list %}
+                    {% load_article_detail result.object True user query %}
+                {% endfor %}
+                {% if page.has_previous or page.has_next %}
+                    <nav class="flex justify-between items-center mt-8 pt-6 border-t border-gray-200 dark:border-gray-700" role="navigation">
+                        {% if page.has_previous %}
+                            <a href="?q={{ query }}&amp;page={{ page.previous_page_number }}"
+                               class="btn btn-secondary inline-flex items-center space-x-2"
+                               rel="prev">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                                </svg>
+                                <span>上一页</span>
+                            </a>
+                        {% else %}
+                            <div></div>
+                        {% endif %}
+
+                        {% if page.has_next %}
+                            <a href="?q={{ query }}&amp;page={{ page.next_page_number }}"
+                               class="btn btn-secondary inline-flex items-center space-x-2"
+                               rel="next">
+                                <span>下一页</span>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </a>
+                        {% else %}
+                            <div></div>
+                        {% endif %}
+                    </nav>
+                {% endif %}
+            {% else %}
+                <header class="archive-header">
+
+                    <h1 class="archive-title">哎呀，关键字：<span>{{ query }}</span>没有找到结果，要不换个词再试试？</h1>
+                </header><!-- .archive-header -->
+            {% endif %}
+        </div><!-- #content -->
+    </div><!-- #primary -->
+{% endblock %}
+
+
+{% block sidebar %}
+    {% load_sidebar request.user 'i' %}
+{% endblock %}
+
+

@@ -1,0 +1,132 @@
+{% extends 'share_layout/base.html' %}
+{% load blog_tags %}
+{% load cache %}
+{% load i18n %}
+{% block header %}
+
+    <title>{% trans 'article archive' %} | {{ SITE_NAME }}</title>
+
+    <meta name="description" content="浏览所有文章的时间归档，按年份和月份整理。"/>
+    <meta name="keywords" content="文章归档, {{ SITE_KEYWORDS }}"/>
+    <link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}"/>
+    <meta property="og:type" content="website"/>
+    <meta property="og:title" content="{% trans 'article archive' %} | {{ SITE_NAME }}"/>
+    <meta property="og:description" content="浏览所有文章的时间归档"/>
+    <meta property="og:url" content="{{ request.get_full_path }}"/>
+    <meta property="og:site_name" content="{{ SITE_NAME }}"/>
+
+{% endblock %}
+{% block content %}
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+        <!-- 主内容区域 -->
+        <div id="primary" class="site-content lg:col-span-8">
+            <div id="content" role="main">
+
+            <!-- 面包屑导航 -->
+            <nav aria-label="breadcrumb" class="breadcrumb-nav">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="/" class="breadcrumb-link">
+                            <svg class="breadcrumb-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                            </svg>
+                            {% trans 'Home' %}
+                        </a>
+                    </li>
+                    <li class="breadcrumb-separator" aria-hidden="true">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <span class="breadcrumb-current">{% trans 'article archive' %}</span>
+                    </li>
+                </ol>
+            </nav>
+
+            <!-- 归档页面头部 -->
+            <header class="archive-header-modern">
+                <div class="archive-hero">
+                    <div class="archive-icon">
+                        <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                        </svg>
+                    </div>
+                    <h1 class="archive-title-modern">{% trans 'article archive' %}</h1>
+                    <p class="archive-subtitle">共 {{ article_list|length }} 篇文章</p>
+                </div>
+            </header>
+
+            <!-- 归档时间线 -->
+            <div class="archive-timeline">
+                {% regroup article_list by pub_time.year as year_post_group %}
+
+                {% for year in year_post_group %}
+                    <div class="timeline-year-block">
+                        <!-- 年份标签 -->
+                        <div class="timeline-year-badge">
+                            <span class="year-number">{{ year.grouper }}</span>
+                            <span class="year-count">{{ year.list|length }} 篇</span>
+                        </div>
+
+                        {% regroup year.list by pub_time.month as month_post_group %}
+
+                        {% for month in month_post_group %}
+                            <div class="timeline-month-block">
+                                <!-- 月份标签 -->
+                                <div class="timeline-month-header">
+                                    <div class="timeline-dot"></div>
+                                    <h3 class="month-title">{{ month.grouper }}月</h3>
+                                    <span class="month-count">{{ month.list|length }} 篇</span>
+                                </div>
+
+                                <!-- 文章列表 -->
+                                <ul class="timeline-articles">
+                                    {% for article in month.list %}
+                                        <li class="timeline-article-item">
+                                            <a href="{{ article.get_absolute_url }}" class="article-link group">
+                                                <div class="article-info">
+                                                    <span class="article-date">{{ article.pub_time|date:"m-d" }}</span>
+                                                    <h4 class="article-title">{{ article.title }}</h4>
+                                                </div>
+                                                <div class="article-meta">
+                                                    {% if article.category %}
+                                                        <span class="article-category">
+                                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                                                            </svg>
+                                                            {{ article.category.name }}
+                                                        </span>
+                                                    {% endif %}
+                                                    <span class="article-views">
+                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                                        </svg>
+                                                        {{ article.views }}
+                                                    </span>
+                                                </div>
+                                                <svg class="article-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                                </svg>
+                                            </a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            </div>
+
+            </div><!-- #content -->
+        </div><!-- #primary -->
+
+        <!-- 侧边栏 - 移动端(<1024px)自动堆叠到主内容下方 -->
+        <aside id="secondary" class="widget-area lg:col-span-4">
+            {% load_sidebar user 'i' %}
+        </aside>
+    </div>
+{% endblock %}
+
+

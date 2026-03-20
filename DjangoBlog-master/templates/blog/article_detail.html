@@ -1,0 +1,84 @@
+{% extends 'share_layout/base.html' %}
+{% load blog_tags %}
+{% load i18n %}
+
+{% block header %}
+    <!-- 基础SEO标签（由视图层提供） -->
+    <title>{{ seo_title|default:SITE_NAME }}</title>
+    <meta name="description" content="{{ seo_description|default:SITE_DESCRIPTION }}"/>
+    <meta name="keywords" content="{{ seo_keywords|default:SITE_KEYWORDS }}"/>
+    <link rel="canonical" href="{{ article.get_full_url }}"/>
+{% endblock %}
+{% block content %}
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+        <!-- 主内容区域 - 调整为9列，给文章更多空间 -->
+        <div id="primary" class="site-content lg:col-span-8">
+            <!-- 移除max-w-3xl限制，使用更宽的max-w-5xl，让文章内容更舒展 -->
+            <!-- 移动端不加padding，避免多层嵌套导致内容过窄 -->
+            <div id="content" role="main" class="max-w-5xl mx-auto px-0 sm:px-4">
+
+            {% load_article_detail article False user %}
+
+            {% if article.type == 'a' %}
+                <nav class="nav-single">
+                    <h3 class="assistive-text">文章导航</h3>
+                    {% if next_article %}
+
+                        <span class="nav-previous"><a href="{{ next_article.get_absolute_url }}" rel="prev"><span
+                                class="meta-nav">&larr;</span> {{ next_article.title }}</a></span>
+                    {% endif %}
+                    {% if prev_article %}
+                        <span class="nav-next"><a href="{{ prev_article.get_absolute_url }}"
+                                                  rel="next">{{ prev_article.title }} <span
+                                class="meta-nav">&rarr;</span></a></span>
+                    {% endif %}
+                </nav><!-- .nav-single -->
+            {% endif %}
+
+            </div><!-- #content -->
+
+            {% if article.comment_status == "o" and OPEN_SITE_COMMENT %}
+
+            {# 使用现代化评论系统 #}
+            {% include 'comments/tags/comment_list_modern.html' %}
+
+            {% if user.is_authenticated %}
+                {% include 'comments/tags/post_comment_modern.html' %}
+            {% else %}
+                <hr class="my-12 border-t-2 border-gray-300 dark:border-gray-600">
+                <div class="comments-area p-6 bg-gradient-to-r from-primary-50 to-blue-50 dark:from-gray-800 dark:to-gray-900 rounded-lg border border-primary-200 dark:border-gray-700">
+                    <div class="flex items-start space-x-4">
+                        <svg class="w-8 h-8 text-primary-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        </svg>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                                登录后发表评论
+                            </h3>
+                            <p class="text-gray-700 dark:text-gray-300 mb-4">
+                                您还没有登录，请先
+                                <a href="{% url "account:login" %}?next={{ request.get_full_path }}"
+                                   class="text-primary-600 dark:text-primary-400 font-medium hover:underline"
+                                   rel="nofollow"
+                                   hx-boost="false">登录</a>
+                                后发表评论。
+                            </p>
+
+                            {% load oauth_tags %}
+                            <div class="flex flex-wrap gap-2">
+                                {% load_oauth_applications request %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            {% endif %}
+        </div><!-- #primary -->
+
+        <!-- 侧边栏 - 移动端(<1024px)自动堆叠到主内容下方 -->
+        <!-- 侧边栏 - 调整为3列，更紧凑 -->
+        <aside id="secondary" class="widget-area lg:col-span-4">
+            {% load_sidebar user "p" %}
+        </aside>
+    </div>
+{% endblock %}
