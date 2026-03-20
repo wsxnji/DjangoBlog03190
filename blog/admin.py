@@ -92,26 +92,33 @@ class ArticlelAdmin(admin.ModelAdmin):
             return site
 
 
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'parent_category', 'index', 'creation_time')
+    list_display_links = ('id', 'name')
+    list_filter = ('parent_category',)
+    search_fields = ('name',)
+    exclude = ('slug', 'last_modify_time', 'creation_time')
+
+    def has_change_permission(self, request, obj=None):
+        """只有超级管理员可以修改特定的系统分类"""
+        if obj and obj.name in ['前端', '后端', '数据结构与算法', '运维', '人工智能']:
+            return request.user.is_superuser
+        return super().has_change_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        """只有超级管理员可以删除特定的系统分类"""
+        if obj and obj.name in ['前端', '后端', '数据结构与算法', '运维', '人工智能']:
+            return request.user.is_superuser
+        return super().has_delete_permission(request, obj)
+
+
 class TagAdmin(admin.ModelAdmin):
     exclude = ('slug', 'last_mod_time', 'creation_time')
 
 
-class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'parent_category', 'index')
-    exclude = ('slug', 'last_mod_time', 'creation_time')
 
 
 class LinksAdmin(admin.ModelAdmin):
-    exclude = ('last_mod_time', 'creation_time')
-
-
-class SideBarAdmin(admin.ModelAdmin):
-    list_display = ('name', 'content', 'is_enable', 'sequence')
-    exclude = ('last_mod_time', 'creation_time')
-
-
-class BlogSettingsAdmin(admin.ModelAdmin):
-    """单例配置Admin - 直接跳转到编辑页面"""
 
     def has_add_permission(self, request):
         """如果已经存在配置，则禁止添加"""
@@ -141,3 +148,14 @@ class BlogSettingsAdmin(admin.ModelAdmin):
         from djangoblog.utils import cache
         cache.clear()
         self.message_user(request, '设置已保存，缓存已清除')
+
+
+class SideBarAdmin(admin.ModelAdmin):
+    list_display = ('name', 'sequence', 'is_enable', 'creation_time')
+    list_display_links = ('name',)
+    list_filter = ('is_enable',)
+    exclude = ('last_modify_time', 'creation_time')
+
+
+class BlogSettingsAdmin(admin.ModelAdmin):
+    exclude = ('last_modify_time', 'creation_time')
