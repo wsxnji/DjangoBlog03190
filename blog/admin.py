@@ -96,9 +96,22 @@ class TagAdmin(admin.ModelAdmin):
     exclude = ('slug', 'last_mod_time', 'creation_time')
 
 
+PROTECTED_CATEGORY_NAMES = ['前端', '后端', '数据结构与算法', '运维', '人工智能']
+
+
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'parent_category', 'index')
     exclude = ('slug', 'last_mod_time', 'creation_time')
+
+    def has_change_permission(self, request, obj=None):
+        if obj is not None and obj.name in PROTECTED_CATEGORY_NAMES and obj.parent_category is None:
+            return request.user.is_superuser
+        return super().has_change_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        if obj is not None and obj.name in PROTECTED_CATEGORY_NAMES and obj.parent_category is None:
+            return request.user.is_superuser
+        return super().has_delete_permission(request, obj)
 
 
 class LinksAdmin(admin.ModelAdmin):
